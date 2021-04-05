@@ -1,0 +1,7 @@
+{
+    "user": "userNexto",
+    "password": "mongo-sample",
+    "server": "fttnextoprojectserver.database.windows.net",
+    "database": "nexto",
+    "port": 1433
+}
