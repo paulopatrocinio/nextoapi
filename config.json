@@ -1,7 +1,4 @@
 {
-    "user": "userNexto",
-    "password": "mongo-sample",
-    "server": "fttnextoprojectserver.database.windows.net",
-    "database": "nexto",
-    "port": 1433
+    "connectionString": "mssql://userNexto:n3xt0!@#@fettnextoprojectserver/nexto",
+    "port": 3000
 }

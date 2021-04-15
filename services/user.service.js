@@ -1,67 +1,115 @@
 var config = require('config.json');
 var sql = require('mssql');
-var Q = require('q');
-// var connection = process.env.connectionStringV2 || config.connectionStringV2;
-// var database = process.env.databaseV2 || config.databaseV2;
+var q = require('q');
 
-// var config = {
-//     user = process.env.user,
-//     password: process.env.password,
-//     server: process.env.server,
-//     database: process.env.database,
-//     port: 1433
-// }
-
-// sql.connect(config).then(() => {
-//     return sql.query`select * from mytable where id = ${value}`
-// }).then(result => {
-//     console.dir(result)
-// }).catch(err => {
-//     console.log(err)
-// });
-
-// sql.on('error', err => {
-//     console.log(err)
-// });
+let databaseConfiguration = require('../dao/configuration/dbconfig');
 
 var service = {};
-service.create = create;
+service.createUser = createUser;
+service.listUsers = listUsers;
+service.getUserById = getUserById;
+service.deleteUser = deleteUser;
+service.updateUser = updateUser;
 
 module.exports = service;
 
-function create(userParam) {
-    var deferred = Q.defer();
+async function listUsers() {
+    let deferred = q.defer();
+    try {
+        let pool = await sql.connect(databaseConfiguration);
+        let users = await pool.request().query("select * from usuario");
 
-    var users = global.conn.collection("users");
-
-    users.findOne(
-        { username: userParam.username },
-        function (err, user) {
-            if (err) deferred.reject(err.name + ': ' + err.message);
-
-            if (user) {
-                // username already exists
-                deferred.reject('Usuário "' + userParam.username + '" já cadastrado');
-            } else {
-                createUser();
-            }
-        });
-
-    function createUser() {
-        // set user object to userParam without the cleartext password
-        var user = lodash.omit(userParam, 'password');
-
-        // add hashed password to user object
-        user.hash = bcrypt.hashSync(userParam.password, 10);
-
-        users.insertOne(
-            user,
-            function (err, doc) {
-                if (err) deferred.reject(err.name + ': ' + err.message);
-
-                deferred.resolve(user);
-            });
+        return users.recordsets;
     }
+    catch (error) {
+        console.log(error);
+        deferred.resolve();
+    }
+}
 
-    return deferred.promise;
+async function getUserById(id) {
+    let deferred = q.defer();
+
+    try {
+        let pool = await sql.connect(databaseConfiguration);
+        let user = await pool.request()
+            .input('userId', sql.Int, id)
+            .query('select * from usuario where id = @userId');
+
+        return user.recordsets;
+    }
+    catch (error) {
+        console.log(error);
+        deferred.resolve();
+    }
+}
+
+async function createUser(user) {
+    let deferred = q.defer();
+
+    try {
+        let pool = await sql.connect(databaseConfiguration);
+        let user = await pool.request()
+            .input('usuario', sql.VarChar, user.usuario)
+            .input('senha', sql.VarChar, user.senha)
+            .input('nome', sql.VarChar, user.nome)
+            .input('telefone', sql.VarChar, user.telefone)
+            .input('email', sql.VarChar, user.email)
+            .input('cpf', sql.VarChar, user.cpf)
+            .input('sexo', sql.VarChar, user.sexo)
+            .input('estado', sql.VarChar, user.estado)
+            .input('cidade', sql.VarChar, user.cidade)
+            .input('perfil', sql.Int, user.perfil)
+            .query('insert into usuario (usuario, senha, nome, telefone, email, cpf, sexo, estado, cidade, perfil) values (@usuario, @senha, @nome, @telefone, @email, @cpf, @sexo, @estado, @cidade, @perfil)');
+
+        return user.recordsets;
+    }
+    catch (error) {
+        console.log(error);
+        deferred.resolve();
+    }
+}
+
+async function updateUser(user) {
+    let deferred = q.defer();
+
+    try {
+        let pool = await sql.connect(databaseConfiguration);
+        let user = await pool.request()
+            .input('id', sql.Int, user.id)
+            .input('usuario', sql.VarChar, user.usuario)
+            .input('senha', sql.VarChar, user.senha)
+            .input('nome', sql.VarChar, user.nome)
+            .input('telefone', sql.VarChar, user.telefone)
+            .input('email', sql.VarChar, user.email)
+            .input('cpf', sql.VarChar, user.cpf)
+            .input('sexo', sql.VarChar, user.sexo)
+            .input('estado', sql.VarChar, user.estado)
+            .input('cidade', sql.VarChar, user.cidade)
+            .input('perfil', sql.Int, user.perfil)
+            .query('update usuario set usuario = @usuario, senha = @senha, nome = @nome, telefone = @telefone, email = @email, cpf = @cpf, sexo = @sexo, estado = @estado, cidade = @cidade, perfil = @perfil where id = @id');
+
+        return user.recordsets;
+    }
+    catch (error) {
+        console.log(error);
+        deferred.resolve();
+    }
+}
+
+async function deleteUser(id) {
+    let deferred = q.defer();
+
+    try {
+        let pool = await sql.connect(databaseConfiguration);
+        let user = await pool.request()
+            .input('id', sql.Int, id)
+            .query('delete from usuario where id = @id');
+
+        return user.recordsets;
+    }
+    catch (error) {
+        console.log(error);
+        deferred.resolve();
+    }
 }
